@@ -1,42 +1,57 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Damp Memories Forest</title>
 
 <style>
-  html, body {
+  body {
     margin: 0;
-    padding: 0;
-    overflow: hidden;
-    height: 100%;
     font-family: sans-serif;
+    overflow: hidden;
+  }
+
+  #toolbar {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    background: rgba(0,0,0,0.6);
+    padding: 10px;
+    border-radius: 8px;
+    color: white;
+    z-index: 10;
+  }
+
+  button {
+    margin: 2px;
+    padding: 6px 10px;
+    cursor: pointer;
+  }
+
+  input {
+    margin-top: 5px;
+    width: 180px;
   }
 
   canvas {
     display: block;
   }
-
-  .label {
-    position: absolute;
-    top: 10px;
-    color: rgba(255,255,255,0.6);
-    font-size: 14px;
-    pointer-events: none;
-  }
-
-  #wet { right: 20px; }
-  #open { left: 50%; transform: translateX(-50%); }
-  #shadow { left: 20px; }
 </style>
 </head>
 
 <body>
 
-<div id="shadow" class="label">Shadow</div>
-<div id="open" class="label">Open</div>
-<div id="wet" class="label">Wet</div>
+<div id="toolbar">
+  <div>
+    <button onclick="setTool('write')">Write</button>
+    <button onclick="setTool('draw')">Draw</button>
+    <button onclick="setTool('tree')">Tree</button>
+    <button onclick="setTool('storm')">Storm</button>
+    <button onclick="setTool('erase')">Erase</button>
+  </div>
+  <input id="textInput" placeholder="Type a sentence..." />
+</div>
 
 <canvas id="canvas"></canvas>
 
@@ -47,78 +62,164 @@ const ctx = canvas.getContext("2d");
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-const zones = {
-  shadow: { x: 0, w: canvas.width / 3 },
-  open:   { x: canvas.width / 3, w: canvas.width / 3 },
-  wet:    { x: (canvas.width / 3) * 2, w: canvas.width / 3 }
-};
-
+let tool = "write";
 let objects = [];
+let drawing = false;
+let currentStroke = [];
 
-// Pre-seeded examples
-objects.push(
-  { x: 100, y: 300, zone: "shadow", type: "tree" },
-  { x: 500, y: 250, zone: "open", type: "tree" },
-  { x: 1000, y: 350, zone: "wet", type: "tree" }
-);
+function setTool(t) {
+  tool = t;
+}
 
+// Zones
 function getZone(x) {
-  if (x < zones.open.x) return "shadow";
-  if (x < zones.wet.x) return "open";
-  return "wet";
+  const w = canvas.width / 4;
+  if (x < w) return "shadow";
+  if (x < w * 2) return "grey";
+  if (x < w * 3) return "blue";
+  return "white";
 }
 
+// Background zones
 function drawZones() {
-  ctx.fillStyle = "#1e1e1e";
-  ctx.fillRect(0, 0, zones.shadow.w, canvas.height);
+  const w = canvas.width / 4;
 
-  ctx.fillStyle = "#2a2a2a";
-  ctx.fillRect(zones.open.x, 0, zones.open.w, canvas.height);
+  ctx.fillStyle = "#111";
+  ctx.fillRect(0, 0, w, canvas.height);
 
-  ctx.fillStyle = "#263238";
-  ctx.fillRect(zones.wet.x, 0, zones.wet.w, canvas.height);
+  ctx.fillStyle = "#444";
+  ctx.fillRect(w, 0, w, canvas.height);
+
+  ctx.fillStyle = "#2a4a6a";
+  ctx.fillRect(w * 2, 0, w, canvas.height);
+
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(w * 3, 0, w, canvas.height);
 }
 
-function drawTree(obj) {
-  ctx.beginPath();
-  ctx.arc(obj.x, obj.y, 8, 0, Math.PI * 2);
+// Rendering objects
+function renderObjects() {
+  objects.forEach(obj => {
+    if (obj.type === "text") {
+      ctx.fillStyle = obj.color;
+      ctx.font = "16px sans-serif";
+      ctx.fillText(obj.text, obj.x, obj.y);
+    }
 
-  if (obj.zone === "shadow") ctx.fillStyle = "rgba(200,200,200,0.4)";
-  if (obj.zone === "open") ctx.fillStyle = "rgba(220,220,220,0.6)";
-  if (obj.zone === "wet") ctx.fillStyle = "rgba(180,200,255,0.5)";
+    if (obj.type === "tree") {
+      ctx.beginPath();
+      ctx.arc(obj.x, obj.y, 8, 0, Math.PI * 2);
+      ctx.fillStyle = "green";
+      ctx.fill();
+    }
 
-  ctx.fill();
+    if (obj.type === "storm") {
+      ctx.beginPath();
+      ctx.arc(obj.x, obj.y, 15, 0, Math.PI * 2);
+      ctx.strokeStyle = "rgba(200,200,255,0.6)";
+      ctx.stroke();
+    }
+
+    if (obj.type === "stroke") {
+      ctx.beginPath();
+      obj.points.forEach((p, i) => {
+        if (i === 0) ctx.moveTo(p.x, p.y);
+        else ctx.lineTo(p.x, p.y);
+      });
+      ctx.strokeStyle = "black";
+      ctx.stroke();
+    }
+  });
 }
 
+// Main render
 function render() {
   drawZones();
-  objects.forEach(drawTree);
+  renderObjects();
 }
 
-canvas.addEventListener("click", (e) => {
+canvas.addEventListener("mousedown", (e) => {
   const rect = canvas.getBoundingClientRect();
   const x = e.clientX - rect.left;
   const y = e.clientY - rect.top;
 
-  const zone = getZone(x);
+  if (tool === "draw") {
+    drawing = true;
+    currentStroke = [{ x, y }];
+  }
 
-  objects.push({
-    x,
-    y,
-    zone,
-    type: "tree"
-  });
+  if (tool === "write") {
+    const text = document.getElementById("textInput").value;
+    if (!text) return;
+
+    objects.push({
+      type: "text",
+      x,
+      y,
+      text,
+      zone: getZone(x),
+      color: "black"
+    });
+  }
+
+  if (tool === "tree") {
+    objects.push({
+      type: "tree",
+      x,
+      y,
+      zone: getZone(x)
+    });
+  }
+
+  if (tool === "storm") {
+    objects.push({
+      type: "storm",
+      x,
+      y,
+      zone: getZone(x)
+    });
+  }
+
+  if (tool === "erase") {
+    objects = objects.filter(obj => {
+      const dx = obj.x - x;
+      const dy = obj.y - y;
+      return Math.sqrt(dx*dx + dy*dy) > 20;
+    });
+  }
 
   render();
 });
 
-render();
+canvas.addEventListener("mousemove", (e) => {
+  if (!drawing) return;
+
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+
+  currentStroke.push({ x, y });
+  render();
+});
+
+canvas.addEventListener("mouseup", () => {
+  if (drawing) {
+    objects.push({
+      type: "stroke",
+      points: currentStroke
+    });
+    drawing = false;
+    currentStroke = [];
+  }
+});
 
 window.addEventListener("resize", () => {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
   render();
 });
+
+render();
 </script>
 
 </body>
