@@ -1,147 +1,125 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Damp Memories Forest</title>
-    
-    <script src="https://cdn.jsdelivr.net/npm/@tldraw/tldraw@2.4.4/tldraw.js"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tldraw/tldraw@2.4.4/tldraw.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Damp Memories Forest</title>
 
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Nanum+Myeongjo&display=swap');
-        
-        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #0d1b13; color: #d1dad3; font-family: 'Nanum Myeongjo', serif; }
-        #app { display: flex; width: 100vw; height: 100vh; }
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    height: 100%;
+    font-family: sans-serif;
+  }
 
-        #sidebar {
-            width: 300px;
-            background: #111f16;
-            border-right: 1px solid #2a4734;
-            padding: 20px;
-            z-index: 100;
-            display: flex;
-            flex-direction: column;
-        }
+  canvas {
+    display: block;
+  }
 
-        textarea {
-            width: 100%;
-            background: #0d1b13;
-            border: 1px solid #2a4734;
-            color: white;
-            padding: 10px;
-            margin: 15px 0;
-            font-family: inherit;
-        }
+  .label {
+    position: absolute;
+    top: 10px;
+    color: rgba(255,255,255,0.6);
+    font-size: 14px;
+    pointer-events: none;
+  }
 
-        .plant-btn {
-            background: #2a4734;
-            color: #a4c0ae;
-            border: 1px solid #a4c0ae;
-            padding: 15px;
-            cursor: pointer;
-            font-family: inherit;
-        }
-
-        #forest-container { flex-grow: 1; position: relative; background: #0d1b13; }
-
-        .labels {
-            position: absolute;
-            inset: 0;
-            display: flex;
-            pointer-events: none; 
-            z-index: 5;
-        }
-        .label {
-            flex: 1;
-            display: flex;
-            align-items: flex-end;
-            justify-content: center;
-            padding-bottom: 20px;
-            opacity: 0.3;
-            font-size: 0.7rem;
-            letter-spacing: 2px;
-        }
-
-        /* The Board container */
-        #my-board { position: absolute; inset: 0; z-index: 10; }
-        
-        /* Forces the drawing area to be dark */
-        .tl-container { background-color: #0d1b13 !important; }
-    </style>
+  #wet { right: 20px; }
+  #open { left: 50%; transform: translateX(-50%); }
+  #shadow { left: 20px; }
+</style>
 </head>
+
 <body>
 
-<div id="app">
-    <div id="sidebar">
-        <h2 style="font-size: 1rem; color: #a4c0ae;">DAMP MEMORIES</h2>
-        <p style="font-size: 0.6rem; opacity: 0.6;">COLLECTIVE ARCHIVE</p>
-        
-        <textarea id="msg" rows="4" placeholder="Type a memory..."></textarea>
-        <button class="plant-btn" onclick="plant()">PLANT TREE</button>
+<div id="shadow" class="label">Shadow</div>
+<div id="open" class="label">Open</div>
+<div id="wet" class="label">Wet</div>
 
-        <div style="margin-top: auto; font-size: 0.6rem; opacity: 0.4; line-height: 2;">
-            <p>• Use <b>Arrow</b> to move storms</p>
-            <p>• Use <b>Pencil</b> to draw branches</p>
-            <p>• Use <b>Eraser</b> to break things</p>
-        </div>
-    </div>
-
-    <div id="forest-container">
-        <div class="labels">
-            <div class="label">WET ZONE</div>
-            <div class="label">OPEN FIELD</div>
-            <div class="label">SHADOW AREA</div>
-        </div>
-        <div id="my-board"></div>
-    </div>
-</div>
+<canvas id="canvas"></canvas>
 
 <script>
-    // CHANGED: Room ID updated to force a brand new session
-    const ROOM_ID = "damp-forest-live-session-99";
-    
-    // Initialize tldraw
-    const board = new tldraw.Tldraw(document.getElementById('my-board'), {
-        roomId: ROOM_ID,
-        onMount: (editor) => {
-            window.editor = editor;
-            editor.updateInstanceState({ isDarkMode: true });
-            
-            // Wait a moment for the board to stabilize, then seed trees
-            setTimeout(() => {
-                const shapes = editor.getShapeIdsInPage(editor.getCurrentPageId());
-                if (shapes.size < 3) {
-                    seed();
-                }
-            }, 1000);
-        }
-    });
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
 
-    function makeTree(x, y, txt, id) {
-        window.editor.createShapes([
-            // Trunk
-            { id: `t-${id}`, type: 'draw', x: x, y: y, props: { segments: [{ points: [{ x: 0, y: 0 }, { x: 5, y: -120 }] }], color: 'grey', size: 'm' } },
-            // Storm (Cloud)
-            { id: `s-${id}`, type: 'draw', x: x - 40, y: y - 150, props: { segments: [{ points: [{ x: 0, y: 25 }, { x: 40, y: 0 }, { x: 80, y: 25 }, { x: 40, y: 50 }, { x: 0, y: 25 }] }], color: 'green', fill: 'semi', size: 'xl' } },
-            // Text
-            { id: `m-${id}`, type: 'text', x: x - 30, y: y - 180, props: { text: txt, color: 'grey', font: 'draw', size: 'm' } }
-        ]);
-    }
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
 
-    function plant() {
-        const val = document.getElementById('msg').value || "memory";
-        const x = 200 + Math.random() * 500;
-        const y = 300 + Math.random() * 300;
-        makeTree(x, y, val, Date.now());
-        document.getElementById('msg').value = "";
-    }
+const zones = {
+  shadow: { x: 0, w: canvas.width / 3 },
+  open:   { x: canvas.width / 3, w: canvas.width / 3 },
+  wet:    { x: (canvas.width / 3) * 2, w: canvas.width / 3 }
+};
 
-    function seed() {
-        makeTree(200, 450, "she left before the coffee cooled", "1");
-        makeTree(550, 350, "the sound of an empty room", "2");
-        makeTree(850, 550, "the part I didn't say out loud", "3");
-    }
+let objects = [];
+
+// Pre-seeded examples
+objects.push(
+  { x: 100, y: 300, zone: "shadow", type: "tree" },
+  { x: 500, y: 250, zone: "open", type: "tree" },
+  { x: 1000, y: 350, zone: "wet", type: "tree" }
+);
+
+function getZone(x) {
+  if (x < zones.open.x) return "shadow";
+  if (x < zones.wet.x) return "open";
+  return "wet";
+}
+
+function drawZones() {
+  ctx.fillStyle = "#1e1e1e";
+  ctx.fillRect(0, 0, zones.shadow.w, canvas.height);
+
+  ctx.fillStyle = "#2a2a2a";
+  ctx.fillRect(zones.open.x, 0, zones.open.w, canvas.height);
+
+  ctx.fillStyle = "#263238";
+  ctx.fillRect(zones.wet.x, 0, zones.wet.w, canvas.height);
+}
+
+function drawTree(obj) {
+  ctx.beginPath();
+  ctx.arc(obj.x, obj.y, 8, 0, Math.PI * 2);
+
+  if (obj.zone === "shadow") ctx.fillStyle = "rgba(200,200,200,0.4)";
+  if (obj.zone === "open") ctx.fillStyle = "rgba(220,220,220,0.6)";
+  if (obj.zone === "wet") ctx.fillStyle = "rgba(180,200,255,0.5)";
+
+  ctx.fill();
+}
+
+function render() {
+  drawZones();
+  objects.forEach(drawTree);
+}
+
+canvas.addEventListener("click", (e) => {
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+
+  const zone = getZone(x);
+
+  objects.push({
+    x,
+    y,
+    zone,
+    type: "tree"
+  });
+
+  render();
+});
+
+render();
+
+window.addEventListener("resize", () => {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  render();
+});
 </script>
+
 </body>
 </html>
