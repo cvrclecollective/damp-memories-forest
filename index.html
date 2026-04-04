@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Damp Memories Forest</title>
+    <script src="https://unpkg.com/@tldraw/tldraw/tldraw.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/@tldraw/tldraw/tldraw.css">
+    <style>
+        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; }
+        #canvas-container { 
+            width: 100vw; 
+            height: 100vh; 
+            background: radial-gradient(circle at center, #e8efe9, #cfd8d3, #b7c3bd); 
+        }
+    </style>
+</head>
+<body>
+    <div id="canvas-container"></div>
+    <script>
+        const container = document.getElementById('canvas-container');
+        const board = new tldraw.Tldraw(container);
+    </script>
+</body>
+</html>
