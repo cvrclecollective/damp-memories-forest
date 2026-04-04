@@ -4,213 +4,253 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Damp Memories Forest</title>
-    <script src="https://unpkg.com/@tldraw/tldraw/tldraw.js"></script>
-    <link rel="stylesheet" href="https://unpkg.com/@tldraw/tldraw/tldraw.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Indie+Flower&family=Nanum+Myeongjo&display=swap');
 
-        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: 'Nanum Myeongjo', serif; }
+        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: 'Nanum Myeongjo', serif; background: #0d1b13; color: #d1dad3; }
         
-        #app-container {
-            display: flex;
-            width: 100vw;
-            height: 100vh;
-            background: #0d1b13; /* Deep Damp Green (Dark Format) */
-        }
+        #app-container { display: flex; width: 100vw; height: 100vh; }
 
-        /* --- THE ART CANVAS (FUSED AESTHETIC) --- */
-        #canvas-wrapper {
+        /* --- THE FOREST CANVAS --- */
+        #forest-canvas {
             flex: 1;
             position: relative;
-            background: #0d1b13; 
+            background: #0d1b13;
+            overflow: hidden;
+            cursor: grab;
         }
 
-        #canvas-container {
-            width: 100%;
-            height: 100%;
-            position: relative;
-        }
+        #forest-canvas:active { cursor: grabbing; }
 
-        /* WATERCOLOR BACKGROUND LAYERS (WHITE AESTHETIC TRANSITIONED TO DARK) */
-        .watercolor-overlay {
+        /* ZONES */
+        .zone-label {
             position: absolute;
-            inset: 0;
-            pointer-events: none;
-            mix-blend-mode: soft-light;
-        }
-
-        /* Subtly evoke watercolor textures in dark space */
-        #wc-1 { background: radial-gradient(circle at 30% 30%, #2a4734, transparent 70%); opacity: 0.3; }
-        #wc-2 { background: radial-gradient(circle at 70% 60%, #1e3a29, transparent 80%); opacity: 0.2; }
-        #wc-3 { background: linear-gradient(180deg, #122218 0%, #0d1b13 100%); opacity: 0.5; }
-
-        /* THE ZONE OVERLAYS (DARK FORMAT STRUCTURE) */
-        .zone-overlay {
-            position: absolute;
-            top: 0;
-            height: 100%;
-            pointer-events: none;
-            display: flex;
-            justify-content: center;
-            align-items: flex-end;
-            padding-bottom: 20px;
-            color: #d1dad3;
-            font-size: 0.8rem;
+            bottom: 20px;
+            width: 33.33%;
+            text-align: center;
             text-transform: uppercase;
-            letter-spacing: 0.1rem;
-            opacity: 0.6;
-            border-right: 1px dashed rgba(209, 218, 211, 0.15);
+            letter-spacing: 2px;
+            font-size: 0.7rem;
+            opacity: 0.5;
+            pointer-events: none;
         }
 
-        #wet-zone { width: 33.33%; left: 0; }
-        #open-field { width: 33.33%; left: 33.33%; }
-        #shadow-area { width: 33.33%; left: 66.66%; border-right: none;}
-
-        /* --- THE SIDEBAR (DARK FORMAT STRUCTURE) --- */
+        /* --- SIDEBAR / PLANTING STATION --- */
         #sidebar {
             width: 320px;
-            background: #111f16; /* Slightly lighter dark green */
-            border-left: 1px solid #1a2f22;
-            padding: 24px;
-            box-shadow: -5px 0 15px rgba(0,0,0,0.2);
-            color: #d1dad3;
-            z-index: 10;
+            background: #111f16;
+            border-right: 1px solid #1a2f22;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
         }
 
-        #sidebar h1 {
-            font-size: 1.4rem;
-            margin-bottom: 8px;
-            color: #a4c0ae;
-        }
+        h1 { font-size: 1.2rem; color: #a4c0ae; margin-bottom: 5px; }
+        .subtitle { font-size: 0.6rem; letter-spacing: 1px; opacity: 0.6; margin-bottom: 30px; }
 
-        #sidebar p.participatory {
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 0.1rem;
-            opacity: 0.7;
-            margin-bottom: 24px;
-        }
-
-        #prompts {
-            margin-bottom: 32px;
-            font-style: italic;
-        }
-
-        #prompts p {
-            margin: 10px 0;
-            opacity: 0.8;
-            font-size: 0.9rem;
-        }
-
-        /* --- PRE-PLANTED MEMORIES (WHITE AESTHETIC CLUSTERS) --- */
-        .planted-memory {
-            position: absolute;
-            pointer-events: auto; /* Re-enable for planted items */
-            cursor: pointer;
-            text-align: center;
-            font-family: 'Indie Flower', cursive; /* Poetic font */
-            color: #d1dad3;
-            transition: transform 0.2s;
-        }
+        .input-group { margin-bottom: 20px; }
+        label { display: block; font-size: 0.7rem; margin-bottom: 8px; opacity: 0.8; }
         
-        /* Watercolor/Soft circle glow (Light aesthetic translated) */
-        .planted-memory::before {
-            content: '';
-            position: absolute;
-            inset: -20px;
-            background: radial-gradient(circle, #2a4734, transparent 70%);
-            border-radius: 50%;
-            filter: blur(10px);
-            z-index: -1;
-            mix-blend-mode: soft-light;
+        textarea {
+            width: 100%;
+            background: #0d1b13;
+            border: 1px solid #2a4734;
+            color: #d1dad3;
+            padding: 10px;
+            font-family: 'Indie Flower', cursive;
+            resize: none;
+            box-sizing: border-box;
+            border-radius: 4px;
         }
 
-        .planted-memory p {
+        .zone-buttons { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; margin-bottom: 15px; }
+        .zone-btn {
+            background: #1a2f22;
+            border: 1px solid #2a4734;
+            color: #d1dad3;
+            font-size: 0.6rem;
+            padding: 8px 0;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .zone-btn.active { background: #2a4734; border-color: #a4c0ae; }
+
+        #plant-btn {
+            background: #2a4734;
+            color: #a4c0ae;
+            border: 1px solid #a4c0ae;
+            padding: 12px;
+            width: 100%;
+            cursor: pointer;
+            font-family: 'Nanum Myeongjo', serif;
+            transition: 0.3s;
+        }
+        #plant-btn:hover { background: #365c43; }
+
+        /* --- THE TREE ELEMENTS --- */
+        .tree-container {
+            position: absolute;
+            width: 200px;
+            height: 250px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+            transition: opacity 0.5s;
+        }
+
+        .tree-graphic {
+            position: absolute;
+            width: 150px;
+            height: 200px;
+            opacity: 0.4;
+            z-index: 1;
+            filter: blur(2px);
+        }
+
+        .tree-text {
+            position: relative;
+            z-index: 2;
+            font-family: 'Indie Flower', cursive;
             font-size: 1rem;
-            line-height: 1.3;
-            margin: 0;
+            text-align: center;
             padding: 10px;
-            max-width: 180px;
+            max-width: 160px;
+            text-shadow: 0 0 10px rgba(0,0,0,0.5);
         }
 
     </style>
 </head>
 <body>
-    <div id="app-container">
-        
-        <div id="sidebar">
-            <h1>Damp Memories Forest</h1>
-            <p class="participatory">Participatory Digital Art</p>
-            
-            <div id="prompts">
-                <p>| Write something that never dried</p>
-                <p>| Place your tree where it feels right</p>
-                <p>| You don't have to explain</p>
-            </div>
-            
-            <div style="font-size: 0.7rem; opacity: 0.5; margin-top: auto;">
-                cvrclecollective.github.io
+
+<div id="app-container">
+    <div id="sidebar">
+        <h1>Damp Memories Forest</h1>
+        <div class="subtitle">PARTICIPATORY DIGITAL ART</div>
+
+        <div class="input-group">
+            <label>YOUR MEMORY</label>
+            <textarea id="memory-input" rows="4" placeholder="write something that never dried..."></textarea>
+        </div>
+
+        <div class="input-group">
+            <label>CHOOSE A ZONE</label>
+            <div class="zone-buttons">
+                <button class="zone-btn active" onclick="setZone(0, this)">WET</button>
+                <button class="zone-btn" onclick="setZone(1, this)">OPEN</button>
+                <button class="zone-btn" onclick="setZone(2, this)">SHADOW</button>
             </div>
         </div>
 
-        <div id="canvas-wrapper">
-            
-            <div class="watercolor-overlay" id="wc-1"></div>
-            <div class="watercolor-overlay" id="wc-2"></div>
-            <div class="watercolor-overlay" id="wc-3"></div>
+        <button id="plant-btn" onclick="plantTree()">PLANT YOUR TREE</button>
 
-            <div class="zone-overlay" id="wet-zone">
-                <div style="text-align:center;">
-                    WET ZONE<br>
-                    <span style="font-size: 0.7rem; text-transform: none; opacity: 0.7;">Blur & Overlap</span>
-                </div>
-            </div>
-            <div class="zone-overlay" id="open-field">
-                <div style="text-align:center;">
-                    OPEN FIELD<br>
-                    <span style="font-size: 0.7rem; text-transform: none; opacity: 0.7;">New Growth</span>
-                </div>
-            </div>
-            <div class="zone-overlay" id="shadow-area">
-                <div style="text-align:center;">
-                    SHADOW AREA<br>
-                    <span style="font-size: 0.7rem; text-transform: none; opacity: 0.7;">it (Half Hidden)</span>
-                </div>
-            </div>
-
-            <div id="canvas-container"></div>
-
-            <div class="planted-memory" style="left: 10%; top: 20%; transform: rotate(-5deg); opacity: 0.8;">
-                <p>she left<br>before the<br>coffee cooled</p>
-            </div>
-            <div class="planted-memory" style="left: 15%; top: 55%; transform: rotate(3deg); opacity: 0.7;">
-                <p>something<br>that never<br>dried</p>
-            </div>
-            
-            <div class="planted-memory" style="left: 45%; top: 15%; transform: rotate(0deg); opacity: 0.9;">
-                <p>the sound of<br>an empty<br>room</p>
-            </div>
-            <div class="planted-memory" style="left: 48%; top: 60%; transform: rotate(-2deg); opacity: 0.8;">
-                <p>I keep the<br>window<br>slightly open</p>
-            </div>
-
-            <div class="planted-memory" style="left: 78%; top: 25%; transform: rotate(5deg); opacity: 0.6;">
-                <p>the part<br>I didn't say<br>out loud</p>
-            </div>
-            <div class="planted-memory" style="left: 75%; top: 65%; transform: rotate(2deg); opacity: 0.5;">
-                <p>a name<br>almost<br>forgotten</p>
-            </div>
-
+        <div style="margin-top: 40px; font-size: 0.7rem; line-height: 1.6; opacity: 0.6;">
+            <p>| Place your tree where it feels right</p>
+            <p>| You don't have to explain</p>
+            <p>| You can move someone else's tree</p>
         </div>
-
     </div>
 
-    <script>
-        // Start the art tool with the UI visible (like tldraw) but minimalist
-        const container = document.getElementById('canvas-container');
-        const board = new tldraw.Tldraw(container, {
-            hideUi: false // We need the UI, but we can style it to be minimal
-        });
-    </script>
+    <div id="forest-canvas" id="canvas">
+        <div class="zone-label" style="left: 0;">Wet Zone<br><span style="font-size:0.5rem">Blur & Overlap</span></div>
+        <div class="zone-label" style="left: 33.33%;">Open Field<br><span style="font-size:0.5rem">New Growth</span></div>
+        <div class="zone-label" style="left: 66.66%;">Shadow Area<br><span style="font-size:0.5rem">it (Half Hidden)</span></div>
+    </div>
+</div>
+
+<script>
+    let selectedZone = 0;
+    const canvas = document.getElementById('forest-canvas');
+
+    // SVG Tree Template
+    const treeSVG = `
+        <svg viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg">
+            <path d="M50 100 Q45 60 50 20 T55 10" stroke="#a4c0ae" stroke-width="2" fill="none" opacity="0.8"/>
+            <circle cx="50" cy="40" r="30" fill="url(#grad)" opacity="0.6" />
+            <defs>
+                <radialGradient id="grad">
+                    <stop offset="0%" stop-color="#a4c0ae" stop-opacity="0.6" />
+                    <stop offset="100%" stop-color="#2a4734" stop-opacity="0" />
+                </radialGradient>
+            </defs>
+        </svg>
+    `;
+
+    function setZone(zoneIndex, btn) {
+        selectedZone = zoneIndex;
+        document.querySelectorAll('.zone-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+    }
+
+    function plantTree(text = null, zone = null, x = null, y = null) {
+        const memoryText = text || document.getElementById('memory-input').value;
+        if (!memoryText) return;
+
+        const zoneIdx = zone !== null ? zone : selectedZone;
+        const container = document.createElement('div');
+        container.className = 'tree-container';
+        
+        // Random placement within the selected zone
+        const zoneWidth = window.innerWidth - 320;
+        const minX = (zoneIdx * (zoneWidth / 3));
+        const maxX = minX + (zoneWidth / 3) - 200;
+        const finalX = x || Math.random() * (maxX - minX) + minX;
+        const finalY = y || Math.random() * (window.innerHeight - 300) + 50;
+
+        container.style.left = finalX + 'px';
+        container.style.top = finalY + 'px';
+
+        container.innerHTML = `
+            <div class="tree-graphic">${treeSVG}</div>
+            <div class="tree-text">${memoryText}</div>
+        `;
+
+        // Make draggable
+        makeDraggable(container);
+        
+        canvas.appendChild(container);
+        if(!text) document.getElementById('memory-input').value = '';
+    }
+
+    function makeDraggable(el) {
+        let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+        el.onmousedown = dragMouseDown;
+
+        function dragMouseDown(e) {
+            e.preventDefault();
+            pos3 = e.clientX;
+            pos4 = e.clientY;
+            document.onmouseup = closeDragElement;
+            document.onmousemove = elementDrag;
+        }
+
+        function elementDrag(e) {
+            pos1 = pos3 - e.clientX;
+            pos2 = pos4 - e.clientY;
+            pos3 = e.clientX;
+            pos4 = e.clientY;
+            el.style.top = (el.offsetTop - pos2) + "px";
+            el.style.left = (el.offsetLeft - pos1) + "px";
+        }
+
+        function closeDragElement() {
+            document.onmouseup = null;
+            document.onmousemove = null;
+        }
+    }
+
+    // Planting initial examples
+    window.onload = () => {
+        plantTree("she left before the coffee cooled", 0, 100, 150);
+        plantTree("something that never dried", 0, 50, 450);
+        plantTree("the sound of an empty room", 1, 400, 100);
+        plantTree("I keep the window slightly open", 1, 450, 400);
+        plantTree("the part I didn't say out loud", 2, 750, 200);
+        plantTree("a name almost forgotten", 2, 800, 500);
+    };
+</script>
+
 </body>
 </html>
