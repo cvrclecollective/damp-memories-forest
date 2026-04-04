@@ -9,10 +9,8 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Nanum+Myeongjo&display=swap');
         body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: 'Nanum Myeongjo', serif; }
-        
         #app-container { display: flex; width: 100vw; height: 100vh; background: #0d1b13; }
 
-        /* SIDEBAR */
         #sidebar {
             width: 300px;
             background: #111f16;
@@ -47,12 +45,11 @@
             width: 100%;
             cursor: pointer;
             margin-bottom: 10px;
+            font-family: inherit;
         }
 
-        /* CANVAS */
         #canvas-container { flex: 1; position: relative; }
 
-        /* ZONE LABELS */
         .zones-bg {
             position: absolute;
             inset: 0;
@@ -84,12 +81,11 @@
         <textarea id="memory-input" rows="3" placeholder="write here..."></textarea>
         
         <button class="btn" onclick="addTree()">PLANT NEW TREE</button>
-        <button class="btn" onclick="addStorm()" style="background: transparent;">ADD EXTRA STORM</button>
 
         <div style="margin-top: 40px; font-size: 0.65rem; opacity: 0.5; line-height: 1.6;">
-            <p>| Use the Eraser to break branches</p>
-            <p>| Use the Pencil to repair them</p>
-            <p>| Move storms to other trees</p>
+            <p>| Move a <b>Storm</b> from a tree</p>
+            <p>| Use the <b>Eraser</b> to break a branch</p>
+            <p>| Use the <b>Pencil</b> to repair it</p>
         </div>
     </div>
 
@@ -104,82 +100,64 @@
 </div>
 
 <script>
-    // 🔗 THE MULTIPLAYER SECRET:
-    // By adding a "room" name to the URL, everyone enters the same space.
-    const ROOM_ID = "damp-forest-collective-room-1";
-    
+    const ROOM_ID = "damp-forest-collective-final-v2";
     const mount = document.getElementById('tldraw-mount');
     
-    // Initialize the shared board
     const app = new tldraw.Tldraw(mount, {
         roomId: ROOM_ID,
         onMount: (editor) => {
             window.editor = editor;
-            editor.updateInstanceState({ isDebugMode: false });
+            // When the board loads, check if it's empty. If so, seed it.
+            setTimeout(() => {
+                if (editor.getShapeIdsInPage(editor.getCurrentPageId()).size < 5) {
+                    seedForest();
+                }
+            }, 500);
         }
     });
 
+    // Helper to create the moveable tree components
+    function createTreeParts(x, y, text, idBase) {
+        return [
+            {
+                id: `trunk-${idBase}`,
+                type: 'draw', x: x, y: y,
+                props: { segments: [{ points: [{ x: 0, y: 0 }, { x: 8, y: -110 }] }], color: 'grey', size: 'm' }
+            },
+            {
+                id: `storm-${idBase}`,
+                type: 'draw', x: x - 45, y: y - 145,
+                props: { segments: [{ points: [{ x: 0, y: 20 }, { x: 40, y: 0 }, { x: 90, y: 20 }, { x: 50, y: 50 }, { x: 0, y: 20 }] }], color: 'green', fill: 'semi', size: 'xl' }
+            },
+            {
+                id: `text-${idBase}`,
+                type: 'text', x: x - 35, y: y - 180,
+                props: { text: text, color: 'grey', font: 'draw', size: 'm' }
+            }
+        ];
+    }
+
     function addTree() {
         const text = document.getElementById('memory-input').value || "unspoken";
-        const x = 400 + Math.random() * 200;
-        const y = 300 + Math.random() * 200;
-
-        // 1. Add the Trunk (Moveable Line)
-        window.editor.createShapes([
-            {
-                id: `trunk-${Date.now()}`,
-                type: 'draw',
-                x: x,
-                y: y,
-                props: {
-                    segments: [{ points: [{ x: 0, y: 0 }, { x: 5, y: -100 }] }],
-                    color: 'grey',
-                    size: 'm'
-                }
-            },
-            // 2. Add the Storm (Moveable Cloud)
-            {
-                id: `storm-${Date.now()}`,
-                type: 'draw',
-                x: x - 40,
-                y: y - 130,
-                props: {
-                    segments: [{ points: [{ x: 0, y: 0 }, { x: 80, y: 0 }, { x: 40, y: -40 }, { x: 0, y: 0 }] }],
-                    color: 'green',
-                    fill: 'semi',
-                    size: 'xl'
-                }
-            },
-            // 3. Add the Text
-            {
-                id: `text-${Date.now()}`,
-                type: 'text',
-                x: x - 30,
-                y: y - 160,
-                props: {
-                    text: text,
-                    color: 'grey',
-                    font: 'draw',
-                    size: 'm'
-                }
-            }
-        ]);
+        const x = 300 + Math.random() * 600;
+        const y = 300 + Math.random() * 300;
+        window.editor.createShapes(createTreeParts(x, y, text, Date.now()));
         document.getElementById('memory-input').value = '';
     }
 
-    function addStorm() {
-        window.editor.createShapes([{
-            id: `extra-storm-${Date.now()}`,
-            type: 'draw',
-            x: 500,
-            y: 300,
-            props: {
-                segments: [{ points: [{ x: 0, y: 0 }, { x: 50, y: 20 }, { x: 100, y: 0 }] }],
-                color: 'green',
-                fill: 'pattern',
-                size: 'xl'
-            }
-        }]);
+    // THIS INSERTS YOUR EXAMPLES AUTOMATICALLY
+    function seedForest() {
+        const examples = [
+            { x: 200, y: 400, text: "she left before the coffee cooled" },
+            { x: 150, y: 650, text: "something that never dried" },
+            { x: 550, y: 350, text: "the sound of an empty room" },
+            { x: 600, y: 600, text: "I keep the window slightly open" },
+            { x: 950, y: 450, text: "the part I didn't say out loud" }
+        ];
+        
+        examples.forEach((ex, i) => {
+            window.editor.createShapes(createTreeParts(ex.x, ex.y, ex.text, `seed-${i}`));
+        });
     }
 </script>
 </body>
