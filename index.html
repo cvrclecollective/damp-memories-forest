@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="https://unpkg.com/@tldraw/tldraw/tldraw.css">
     <style>
         body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; }
+        /* The Forest Background */
         #canvas-container { 
             width: 100vw; 
             height: 100vh; 
@@ -18,8 +19,11 @@
 <body>
     <div id="canvas-container"></div>
     <script>
+        // This version ensures the UI (tools) is visible
         const container = document.getElementById('canvas-container');
-        const board = new tldraw.Tldraw(container);
+        const board = new tldraw.Tldraw(container, {
+            hideUi: false // This makes sure the toolbar is there!
+        });
     </script>
 </body>
 </html>
