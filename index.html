@@ -4,20 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Damp Memories Forest</title>
-    <script src="https://unpkg.com/@tldraw/tldraw@2.4.4/tldraw.js"></script>
-    <link rel="stylesheet" href="https://unpkg.com/@tldraw/tldraw@2.4.4/tldraw.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/@tldraw/tldraw@2.4.4/tldraw.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tldraw/tldraw@2.4.4/tldraw.css">
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Nanum+Myeongjo&display=swap');
+        
         body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #0d1b13; color: #d1dad3; font-family: 'Nanum Myeongjo', serif; }
         #app { display: flex; width: 100vw; height: 100vh; }
 
-        /* Sidebar */
         #sidebar {
             width: 300px;
             background: #111f16;
             border-right: 1px solid #2a4734;
             padding: 20px;
-            z-index: 100; /* Keeps buttons on top */
+            z-index: 100;
             display: flex;
             flex-direction: column;
         }
@@ -38,13 +40,11 @@
             border: 1px solid #a4c0ae;
             padding: 15px;
             cursor: pointer;
-            font-weight: bold;
+            font-family: inherit;
         }
 
-        /* The Forest Area */
-        #forest-container { flex-grow: 1; position: relative; }
+        #forest-container { flex-grow: 1; position: relative; background: #0d1b13; }
 
-        /* Labels - We use pointer-events: none so they don't block the drawing */
         .labels {
             position: absolute;
             inset: 0;
@@ -63,8 +63,11 @@
             letter-spacing: 2px;
         }
 
-        /* The Board */
-        .tldraw-zone { position: absolute; inset: 0; z-index: 10; }
+        /* The Board container */
+        #my-board { position: absolute; inset: 0; z-index: 10; }
+        
+        /* Forces the drawing area to be dark */
+        .tl-container { background-color: #0d1b13 !important; }
     </style>
 </head>
 <body>
@@ -77,10 +80,10 @@
         <textarea id="msg" rows="4" placeholder="Type a memory..."></textarea>
         <button class="plant-btn" onclick="plant()">PLANT TREE</button>
 
-        <div style="margin-top: auto; font-size: 0.6rem; opacity: 0.4;">
-            <p>1. Use the Arrow to move storms</p>
-            <p>2. Use the Pencil to draw branches</p>
-            <p>3. Use the Eraser to break things</p>
+        <div style="margin-top: auto; font-size: 0.6rem; opacity: 0.4; line-height: 2;">
+            <p>• Use <b>Arrow</b> to move storms</p>
+            <p>• Use <b>Pencil</b> to draw branches</p>
+            <p>• Use <b>Eraser</b> to break things</p>
         </div>
     </div>
 
@@ -90,49 +93,54 @@
             <div class="label">OPEN FIELD</div>
             <div class="label">SHADOW AREA</div>
         </div>
-        <div id="my-board" class="tldraw-zone"></div>
+        <div id="my-board"></div>
     </div>
 </div>
 
 <script>
-    // This creates a shared room so everyone sees the same forest
-    const id = "damp-forest-final-v100";
+    // CHANGED: Room ID updated to force a brand new session
+    const ROOM_ID = "damp-forest-live-session-99";
     
+    // Initialize tldraw
     const board = new tldraw.Tldraw(document.getElementById('my-board'), {
-        roomId: id,
-        onMount: (ed) => {
-            window.editor = ed;
-            ed.updateInstanceState({ isDarkMode: true });
+        roomId: ROOM_ID,
+        onMount: (editor) => {
+            window.editor = editor;
+            editor.updateInstanceState({ isDarkMode: true });
             
-            // Seed initial examples if empty
+            // Wait a moment for the board to stabilize, then seed trees
             setTimeout(() => {
-                if (ed.getShapeIdsInPage(ed.getCurrentPageId()).size < 2) {
+                const shapes = editor.getShapeIdsInPage(editor.getCurrentPageId());
+                if (shapes.size < 3) {
                     seed();
                 }
             }, 1000);
         }
     });
 
+    function makeTree(x, y, txt, id) {
+        window.editor.createShapes([
+            // Trunk
+            { id: `t-${id}`, type: 'draw', x: x, y: y, props: { segments: [{ points: [{ x: 0, y: 0 }, { x: 5, y: -120 }] }], color: 'grey', size: 'm' } },
+            // Storm (Cloud)
+            { id: `s-${id}`, type: 'draw', x: x - 40, y: y - 150, props: { segments: [{ points: [{ x: 0, y: 25 }, { x: 40, y: 0 }, { x: 80, y: 25 }, { x: 40, y: 50 }, { x: 0, y: 25 }] }], color: 'green', fill: 'semi', size: 'xl' } },
+            // Text
+            { id: `m-${id}`, type: 'text', x: x - 30, y: y - 180, props: { text: txt, color: 'grey', font: 'draw', size: 'm' } }
+        ]);
+    }
+
     function plant() {
         const val = document.getElementById('msg').value || "memory";
-        const x = 200 + Math.random() * 400;
+        const x = 200 + Math.random() * 500;
         const y = 300 + Math.random() * 300;
         makeTree(x, y, val, Date.now());
         document.getElementById('msg').value = "";
     }
 
-    function makeTree(x, y, txt, time) {
-        window.editor.createShapes([
-            { id: `t-${time}`, type: 'draw', x: x, y: y, props: { segments: [{ points: [{ x: 0, y: 0 }, { x: 5, y: -100 }] }], color: 'grey' } },
-            { id: `s-${time}`, type: 'draw', x: x - 40, y: y - 130, props: { segments: [{ points: [{ x: 0, y: 20 }, { x: 40, y: 0 }, { x: 80, y: 20 }, { x: 40, y: 40 }, { x: 0, y: 20 }] }], color: 'green', fill: 'semi' } },
-            { id: `m-${time}`, type: 'text', x: x - 30, y: y - 160, props: { text: txt, color: 'grey', size: 'm' } }
-        ]);
-    }
-
     function seed() {
-        makeTree(200, 400, "coffee cooled", "s1");
-        makeTree(500, 300, "empty room", "s2");
-        makeTree(800, 500, "unspoken", "s3");
+        makeTree(200, 450, "she left before the coffee cooled", "1");
+        makeTree(550, 350, "the sound of an empty room", "2");
+        makeTree(850, 550, "the part I didn't say out loud", "3");
     }
 </script>
 </body>
