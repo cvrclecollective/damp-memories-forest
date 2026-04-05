@@ -1,1 +1,53 @@
+/* style.css */
+:root {
+    --deep-moss: #0a0f0a;
+    --misty-green: #1d2b1d;
+    --glow-color: rgba(163, 184, 163, 0.4);
+    --text-shine: #e0eee0;
+}
 
+body {
+    margin: 0;
+    display: flex;
+    height: 100vh;
+    background-color: var(--deep-moss);
+    font-family: 'Georgia', serif;
+    color: var(--text-shine);
+}
+
+#forest-canvas {
+    flex: 1;
+    display: flex;
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(180deg, #0a0f0a 0%, #1a241a 100%);
+}
+
+.zone {
+    flex: 1;
+    border-right: 1px solid rgba(255,255,255,0.05);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    padding-bottom: 30px;
+}
+
+/* The "Shining" Tree styling */
+.tree {
+    position: absolute;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(5px);
+    border-radius: 50% 40% 60% 45%;
+    box-shadow: 0 0 20px var(--glow-color);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    text-align: center;
+    transition: all 2s ease-in-out; /* Smooth drifting */
+    cursor: pointer;
+}
+
+.tree:hover {
+    box-shadow: 0 0 40px rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+}
