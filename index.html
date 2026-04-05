@@ -1,20 +1,33 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <title>Damp Memories Forest</title>
     <link rel="stylesheet" href="style.css">
-</head>
+    </head>
 <body>
 
     <main id="forest-canvas">
-        <div class="zone">Wet Zone</div>
-        <div class="zone">Open Field</div>
-        <div class="zone">Shadow Area</div>
+        <div class="zone wet-zone"></div>
+        <div class="zone open-field"></div>
+        <div class="zone shadow-area"></div>
+
+        <div class="tree" style="top: 25%; left: 8%;">
+            <img src="assets/trees/tree_cluster_1.png" alt="Tree">
+            <span>she left before the coffee c</span>
+        </div>
+        <div class="wet-zone-drips"></div>
     </main>
 
     <aside class="sidebar">
         <h1>Damp Memories</h1>
-        <textarea id="memory-input" placeholder="What never dried?"></textarea>
-        <button id="plant-btn">Plant your tree</button>
+        <p class="subtitle">participatory digital art</p>
+
+        <div class="form-section">
+            <label>YOUR MEMORY</label>
+            <textarea placeholder=""></textarea>
+        </div>
+        <button id="plant-btn">plant your tree</button>
     </aside>
 
     <script src="script.js"></script>
