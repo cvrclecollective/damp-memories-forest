@@ -82,3 +82,15 @@ textarea {
     border: 1px solid #ddd;
     border-bottom: 2px solid #333; /* Hand-drawn look */
 }
+
+/* This replaces the need for sticky_note.png */
+.memory-note {
+    background-color: #f9f7d9; /* Classic paper yellow */
+    padding: 10px;
+    border-radius: 2px;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+    font-family: 'Handlee', cursive; /* Or any handwriting font */
+    border: 1px solid #e0dcb0;
+    transform: rotate(-1deg); /* Makes it look hand-placed */
+    max-width: 150px;
+}
