@@ -1,225 +1,195 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Damp Memories Forest</title>
 
 <style>
-  body {
+body {
     margin: 0;
-    font-family: sans-serif;
-    overflow: hidden;
-  }
+    font-family: serif;
+    background: #0b140f;
+    color: #d6e2da;
+}
 
-  #toolbar {
-    position: fixed;
-    top: 10px;
-    left: 10px;
-    background: rgba(0,0,0,0.6);
+/* LAYOUT */
+#app {
+    display: flex;
+    height: 100vh;
+}
+
+/* LEFT: FOREST */
+#forest {
+    flex: 3;
+    display: flex;
+}
+
+/* ZONES */
+.zone {
+    flex: 1;
+    position: relative;
+    border-right: 1px solid rgba(255,255,255,0.05);
     padding: 10px;
-    border-radius: 8px;
-    color: white;
-    z-index: 10;
-  }
+}
 
-  button {
-    margin: 2px;
-    padding: 6px 10px;
+.zone-title {
+    position: absolute;
+    bottom: 10px;
+    width: 100%;
+    text-align: center;
+    font-size: 0.7rem;
+    opacity: 0.5;
+}
+
+/* COLORS */
+#wet { background: #0a1a12; }
+#open { background: #10241a; }
+#shadow { background: #06110c; }
+
+/* RIGHT: WHITE CREATION AREA */
+#creator {
+    flex: 1;
+    background: #ffffff;
+    color: black;
+    display: flex;
+    flex-direction: column;
+    padding: 15px;
+}
+
+/* INPUT */
+textarea {
+    width: 100%;
+    height: 100px;
+    margin-bottom: 10px;
+}
+
+/* BUTTON */
+button {
+    padding: 10px;
     cursor: pointer;
-  }
+}
 
-  input {
-    margin-top: 5px;
-    width: 180px;
-  }
+/* TREE OBJECT */
+.tree {
+    position: absolute;
+    padding: 10px 14px;
+    border-radius: 50px;
+    cursor: grab;
+    font-size: 0.8rem;
+    max-width: 150px;
+    word-wrap: break-word;
+}
 
-  canvas {
-    display: block;
-  }
+/* VISUAL PER ZONE */
+.wet-tree {
+    background: rgba(180, 220, 200, 0.15);
+    backdrop-filter: blur(4px);
+}
+
+.open-tree {
+    background: rgba(200, 255, 220, 0.3);
+}
+
+.shadow-tree {
+    background: rgba(200, 200, 200, 0.1);
+    opacity: 0.6;
+}
+
+/* WHITE AREA TREES */
+.creator-tree {
+    background: #eee;
+    color: black;
+    position: relative;
+    margin-top: 10px;
+}
 </style>
 </head>
 
 <body>
 
-<div id="toolbar">
-  <div>
-    <button onclick="setTool('write')">Write</button>
-    <button onclick="setTool('draw')">Draw</button>
-    <button onclick="setTool('tree')">Tree</button>
-    <button onclick="setTool('storm')">Storm</button>
-    <button onclick="setTool('erase')">Erase</button>
-  </div>
-  <input id="textInput" placeholder="Type a sentence..." />
+<div id="app">
+
+    <!-- FOREST -->
+    <div id="forest">
+        <div id="wet" class="zone" ondragover="allowDrop(event)" ondrop="drop(event, 'wet')">
+            <div class="zone-title">WET ZONE</div>
+        </div>
+
+        <div id="open" class="zone" ondragover="allowDrop(event)" ondrop="drop(event, 'open')">
+            <div class="zone-title">OPEN FIELD</div>
+        </div>
+
+        <div id="shadow" class="zone" ondragover="allowDrop(event)" ondrop="drop(event, 'shadow')">
+            <div class="zone-title">SHADOW AREA</div>
+        </div>
+    </div>
+
+    <!-- CREATOR -->
+    <div id="creator">
+        <h3>DAMP MEMORIES</h3>
+        <textarea id="textInput" placeholder="write what never dried..."></textarea>
+        <button onclick="createTree()">Create Memory</button>
+
+        <div id="staging"></div>
+    </div>
+
 </div>
 
-<canvas id="canvas"></canvas>
-
 <script>
-const canvas = document.getElementById("canvas");
-const ctx = canvas.getContext("2d");
 
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+let counter = 0;
 
-let tool = "write";
-let objects = [];
-let drawing = false;
-let currentStroke = [];
-
-function setTool(t) {
-  tool = t;
-}
-
-// Zones
-function getZone(x) {
-  const w = canvas.width / 4;
-  if (x < w) return "shadow";
-  if (x < w * 2) return "grey";
-  if (x < w * 3) return "blue";
-  return "white";
-}
-
-// Background zones
-function drawZones() {
-  const w = canvas.width / 4;
-
-  ctx.fillStyle = "#111";
-  ctx.fillRect(0, 0, w, canvas.height);
-
-  ctx.fillStyle = "#444";
-  ctx.fillRect(w, 0, w, canvas.height);
-
-  ctx.fillStyle = "#2a4a6a";
-  ctx.fillRect(w * 2, 0, w, canvas.height);
-
-  ctx.fillStyle = "#ffffff";
-  ctx.fillRect(w * 3, 0, w, canvas.height);
-}
-
-// Rendering objects
-function renderObjects() {
-  objects.forEach(obj => {
-    if (obj.type === "text") {
-      ctx.fillStyle = obj.color;
-      ctx.font = "16px sans-serif";
-      ctx.fillText(obj.text, obj.x, obj.y);
-    }
-
-    if (obj.type === "tree") {
-      ctx.beginPath();
-      ctx.arc(obj.x, obj.y, 8, 0, Math.PI * 2);
-      ctx.fillStyle = "green";
-      ctx.fill();
-    }
-
-    if (obj.type === "storm") {
-      ctx.beginPath();
-      ctx.arc(obj.x, obj.y, 15, 0, Math.PI * 2);
-      ctx.strokeStyle = "rgba(200,200,255,0.6)";
-      ctx.stroke();
-    }
-
-    if (obj.type === "stroke") {
-      ctx.beginPath();
-      obj.points.forEach((p, i) => {
-        if (i === 0) ctx.moveTo(p.x, p.y);
-        else ctx.lineTo(p.x, p.y);
-      });
-      ctx.strokeStyle = "black";
-      ctx.stroke();
-    }
-  });
-}
-
-// Main render
-function render() {
-  drawZones();
-  renderObjects();
-}
-
-canvas.addEventListener("mousedown", (e) => {
-  const rect = canvas.getBoundingClientRect();
-  const x = e.clientX - rect.left;
-  const y = e.clientY - rect.top;
-
-  if (tool === "draw") {
-    drawing = true;
-    currentStroke = [{ x, y }];
-  }
-
-  if (tool === "write") {
-    const text = document.getElementById("textInput").value;
+// CREATE TREE IN WHITE AREA
+function createTree() {
+    const text = document.getElementById('textInput').value;
     if (!text) return;
 
-    objects.push({
-      type: "text",
-      x,
-      y,
-      text,
-      zone: getZone(x),
-      color: "black"
-    });
-  }
+    const tree = document.createElement('div');
+    tree.className = 'tree creator-tree';
+    tree.innerText = text;
+    tree.draggable = true;
 
-  if (tool === "tree") {
-    objects.push({
-      type: "tree",
-      x,
-      y,
-      zone: getZone(x)
-    });
-  }
+    tree.id = "tree-" + counter++;
 
-  if (tool === "storm") {
-    objects.push({
-      type: "storm",
-      x,
-      y,
-      zone: getZone(x)
-    });
-  }
+    tree.ondragstart = (e) => {
+        e.dataTransfer.setData("text/plain", tree.id);
+    };
 
-  if (tool === "erase") {
-    objects = objects.filter(obj => {
-      const dx = obj.x - x;
-      const dy = obj.y - y;
-      return Math.sqrt(dx*dx + dy*dy) > 20;
-    });
-  }
+    document.getElementById('staging').appendChild(tree);
+    document.getElementById('textInput').value = '';
+}
 
-  render();
-});
+// ALLOW DROP
+function allowDrop(ev) {
+    ev.preventDefault();
+}
 
-canvas.addEventListener("mousemove", (e) => {
-  if (!drawing) return;
+// DROP INTO ZONE
+function drop(ev, zone) {
+    ev.preventDefault();
+    const id = ev.dataTransfer.getData("text");
+    const tree = document.getElementById(id);
 
-  const rect = canvas.getBoundingClientRect();
-  const x = e.clientX - rect.left;
-  const y = e.clientY - rect.top;
+    const clone = tree.cloneNode(true);
+    clone.style.position = "absolute";
+    clone.style.left = ev.offsetX + "px";
+    clone.style.top = ev.offsetY + "px";
 
-  currentStroke.push({ x, y });
-  render();
-});
+    clone.classList.remove("creator-tree");
 
-canvas.addEventListener("mouseup", () => {
-  if (drawing) {
-    objects.push({
-      type: "stroke",
-      points: currentStroke
-    });
-    drawing = false;
-    currentStroke = [];
-  }
-});
+    if (zone === "wet") clone.classList.add("wet-tree");
+    if (zone === "open") clone.classList.add("open-tree");
+    if (zone === "shadow") clone.classList.add("shadow-tree");
 
-window.addEventListener("resize", () => {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-  render();
-});
+    clone.draggable = true;
+    clone.ondragstart = (e) => {
+        e.dataTransfer.setData("text/plain", clone.id);
+    };
 
-render();
+    ev.target.appendChild(clone);
+}
+
 </script>
 
 </body>
