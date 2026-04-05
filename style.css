@@ -1,53 +1,95 @@
 /* style.css */
 :root {
-    --deep-moss: #0a0f0a;
-    --misty-green: #1d2b1d;
-    --glow-color: rgba(163, 184, 163, 0.4);
-    --text-shine: #e0eee0;
+    /* Lighter, mossier greens */
+    --forest-top: #1a241a; 
+    --forest-bottom: #2d3d2d;
+    --sidebar-bg: #151d15;
+    --glow-bright: rgba(200, 255, 200, 0.5);
+    --text-white: #f0f7f0;
 }
 
 body {
     margin: 0;
     display: flex;
     height: 100vh;
-    background-color: var(--deep-moss);
+    background: var(--forest-top);
     font-family: 'Georgia', serif;
-    color: var(--text-shine);
+    color: var(--text-white);
+    overflow: hidden;
 }
 
 #forest-canvas {
     flex: 1;
-    display: flex;
     position: relative;
-    overflow: hidden;
-    background: linear-gradient(180deg, #0a0f0a 0%, #1a241a 100%);
+    /* Gradient makes the "damp" floor look lighter */
+    background: linear-gradient(180deg, var(--forest-top) 0%, var(--forest-bottom) 100%);
+    display: flex;
 }
 
 .zone {
     flex: 1;
-    border-right: 1px solid rgba(255,255,255,0.05);
+    border-right: 1px solid rgba(255,255,255,0.1);
     display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    align-items: center;
-    padding-bottom: 30px;
+    align-items: flex-end;
+    justify-content: center;
+    padding-bottom: 20px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-size: 0.7rem;
+    color: rgba(255,255,255,0.3);
 }
 
-/* The "Shining" Tree styling */
+/* THE SHINING TREE */
 .tree {
     position: absolute;
-    padding: 20px;
-    background: rgba(255, 255, 255, 0.03);
-    backdrop-filter: blur(5px);
-    border-radius: 50% 40% 60% 45%;
-    box-shadow: 0 0 20px var(--glow-color);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    text-align: center;
-    transition: all 2s ease-in-out; /* Smooth drifting */
-    cursor: pointer;
+    padding: 20px 30px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 60% 40% 70% 50%;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: var(--text-white);
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+    box-shadow: 0 0 30px var(--glow-bright);
+    font-style: italic;
+    cursor: move;
+    transition: box-shadow 0.3s ease;
 }
 
 .tree:hover {
-    box-shadow: 0 0 40px rgba(255, 255, 255, 0.3);
-    transform: scale(1.1);
+    box-shadow: 0 0 50px rgba(255, 255, 255, 0.6);
+}
+
+/* SIDEBAR STYLING */
+.sidebar {
+    width: 320px;
+    background: var(--sidebar-bg);
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    border-left: 1px solid #2a352a;
+}
+
+#memory-input {
+    background: #0a0e0a;
+    border: 1px solid #3d523d;
+    color: white;
+    padding: 15px;
+    font-family: inherit;
+    height: 100px;
+}
+
+#plant-btn {
+    background: #3d523d;
+    color: white;
+    border: none;
+    padding: 15px;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+#plant-btn:hover {
+    background: #4d664d;
+    box-shadow: 0 0 15px var(--glow-bright);
 }
