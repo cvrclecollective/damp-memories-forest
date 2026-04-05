@@ -120,3 +120,44 @@ textarea {
     background: rgba(255, 255, 255, 0.4);
     transform: translateX(-50%);
 }
+
+#forest-canvas {
+    position: relative;
+    width: 75%; /* Leaves room for your sidebar */
+    height: 100vh;
+    background-image: url('assets/sketchbook_bg.jpg');
+    background-size: cover;
+    background-position: center;
+    overflow: hidden;
+    display: flex;
+}
+
+/* This creates the 3 invisible columns for your zones */
+.zone {
+    flex: 1;
+    height: 100%;
+    position: relative;
+    /* Optional: border: 1px dashed rgba(0,0,0,0.1); // Turn on to see zones while building */
+}
+
+.tree {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 120px;
+}
+
+.tree img {
+    width: 100%;
+    height: auto;
+}
+
+.tree span {
+    background-color: #fdfae4;
+    padding: 5px 10px;
+    font-size: 12px;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+    transform: rotate(-2deg);
+    margin-top: -10px;
+}
