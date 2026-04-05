@@ -1,95 +1,84 @@
 /* style.css */
-:root {
-    /* Lighter, mossier greens */
-    --forest-top: #1a241a; 
-    --forest-bottom: #2d3d2d;
-    --sidebar-bg: #151d15;
-    --glow-bright: rgba(200, 255, 200, 0.5);
-    --text-white: #f0f7f0;
-}
-
 body {
     margin: 0;
+    padding: 0;
     display: flex;
     height: 100vh;
-    background: var(--forest-top);
-    font-family: 'Georgia', serif;
-    color: var(--text-white);
+    font-family: 'Georgia', 'serif'; /* Match handwritten look */
+    color: #333;
     overflow: hidden;
 }
 
+/* 1. Main Canvas - This is the key */
 #forest-canvas {
-    flex: 1;
-    position: relative;
-    /* Gradient makes the "damp" floor look lighter */
-    background: linear-gradient(180deg, var(--forest-top) 0%, var(--forest-bottom) 100%);
-    display: flex;
+    flex: 1; /* Occupies all space except sidebar */
+    position: relative; /* All trees are positioned relative to this */
+    
+    /* Load the empty sketchbook background we extracted */
+    background: url('assets/sketchbook_bg.jpg') no-repeat center center;
+    background-size: cover;
+    
+    /* Subtle CSS gradient overlay for the zones (if not in the image) */
+    background-image: 
+        linear-gradient(to right, rgba(163, 184, 196, 0.1) 0%, rgba(209, 218, 209, 0.1) 40%, rgba(58, 71, 64, 0.1) 100%),
+        url('assets/sketchbook_bg.jpg');
 }
 
+/* 2. Position the zones on the main canvas */
 .zone {
-    flex: 1;
-    border-right: 1px solid rgba(255,255,255,0.1);
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
-    padding-bottom: 20px;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    font-size: 0.7rem;
-    color: rgba(255,255,255,0.3);
+    position: absolute;
+    top: 0;
+    height: 100%;
+    width: 33.33%;
+    border-right: 1px solid rgba(0,0,0,0.05); /* Subtle division */
 }
+.wet-zone { left: 0%; }
+.open-field { left: 33.33%; }
+.shadow-area { left: 66.66%; }
 
-/* THE SHINING TREE */
+/* 3. Style and position the individual memories/trees */
 .tree {
     position: absolute;
-    padding: 20px 30px;
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    border-radius: 60% 40% 70% 50%;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: var(--text-white);
-    text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
-    box-shadow: 0 0 30px var(--glow-bright);
-    font-style: italic;
-    cursor: move;
-    transition: box-shadow 0.3s ease;
-}
-
-.tree:hover {
-    box-shadow: 0 0 50px rgba(255, 255, 255, 0.6);
-}
-
-/* SIDEBAR STYLING */
-.sidebar {
-    width: 320px;
-    background: var(--sidebar-bg);
-    padding: 40px;
     display: flex;
     flex-direction: column;
-    gap: 20px;
-    border-left: 1px solid #2a352a;
+    align-items: center;
+    transition: transform 0.5s ease-in-out; /* Drifting effect */
 }
 
-#memory-input {
-    background: #0a0e0a;
-    border: 1px solid #3d523d;
-    color: white;
-    padding: 15px;
-    font-family: inherit;
-    height: 100px;
+/* Specific styling for the cluster trees from image 1 */
+.tree img {
+    opacity: 0.8; /* Keep them 'damp' */
 }
 
-#plant-btn {
-    background: #3d523d;
-    color: white;
-    border: none;
-    padding: 15px;
-    cursor: pointer;
-    text-transform: uppercase;
-    letter-spacing: 1px;
+/* Label text from the Typewriter style */
+.tree span {
+    font-size: 0.8rem;
+    color: #444;
+    text-align: center;
+    font-family: 'Courier New', Courier, monospace; /* Typewriter font */
 }
 
-#plant-btn:hover {
-    background: #4d664d;
-    box-shadow: 0 0 15px var(--glow-bright);
+/* 4. The Drips (Wet Zone only) */
+.wet-zone-drips {
+    position: absolute;
+    top: 50%;
+    left: 10%;
+    width: 2px;
+    height: 150px;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.0));
+}
+
+/* 5. The Sidebar and Sticky Note styling */
+.sidebar {
+    width: 300px;
+    background-color: #f3f3f3; /* Faded beige paper */
+    padding: 40px;
+    border-left: 2px solid #ccc;
+    box-shadow: -10px 0 20px rgba(0,0,0,0.1);
+}
+
+textarea {
+    background: url('assets/ui/paper_texture.jpg') repeat; /* Add paper texture inside text boxes */
+    border: 1px solid #ddd;
+    border-bottom: 2px solid #333; /* Hand-drawn look */
 }
